@@ -2,95 +2,135 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+@import url('https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* Islamic-inspired color palette */
+    --background: 40 30% 98%;
+    --foreground: 160 40% 10%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card: 40 25% 96%;
+    --card-foreground: 160 40% 10%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover: 40 25% 96%;
+    --popover-foreground: 160 40% 10%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    /* Deep emerald green - primary Islamic color */
+    --primary: 166 75% 21%;
+    --primary-foreground: 40 30% 98%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    /* Warm cream - secondary */
+    --secondary: 40 30% 92%;
+    --secondary-foreground: 160 40% 15%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 40 20% 90%;
+    --muted-foreground: 160 20% 40%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    /* Gold accent - traditional Islamic art */
+    --accent: 43 65% 58%;
+    --accent-foreground: 160 40% 10%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 40 30% 98%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 40 20% 85%;
+    --input: 40 20% 88%;
+    --ring: 166 75% 21%;
 
-    --radius: 0.5rem;
+    --radius: 0.75rem;
 
-    --sidebar-background: 0 0% 98%;
+    /* Custom Islamic design tokens */
+    --gold: 43 65% 58%;
+    --gold-light: 43 60% 75%;
+    --gold-glow: 43 70% 50%;
+    --emerald-deep: 166 75% 21%;
+    --emerald-light: 166 50% 35%;
+    --emerald-glow: 166 60% 25%;
+    --cream: 40 30% 96%;
+    --cream-warm: 35 40% 94%;
+    --arabic-black: 160 40% 8%;
 
-    --sidebar-foreground: 240 5.3% 26.1%;
+    /* Shadows */
+    --shadow-soft: 0 4px 20px -4px hsl(166 40% 20% / 0.1);
+    --shadow-card: 0 8px 32px -8px hsl(166 40% 20% / 0.12);
+    --shadow-elevated: 0 16px 48px -12px hsl(166 40% 20% / 0.15);
+    --shadow-gold: 0 4px 24px -4px hsl(43 70% 50% / 0.25);
 
-    --sidebar-primary: 240 5.9% 10%;
+    /* Gradients */
+    --gradient-gold: linear-gradient(135deg, hsl(43 65% 58%), hsl(43 70% 45%));
+    --gradient-emerald: linear-gradient(135deg, hsl(166 75% 21%), hsl(166 60% 28%));
+    --gradient-hero: linear-gradient(180deg, hsl(40 30% 98%) 0%, hsl(40 25% 94%) 100%);
+    --gradient-glass: linear-gradient(135deg, hsl(0 0% 100% / 0.9), hsl(0 0% 100% / 0.7));
 
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    /* Sidebar */
+    --sidebar-background: 40 25% 96%;
+    --sidebar-foreground: 160 40% 15%;
+    --sidebar-primary: 166 75% 21%;
+    --sidebar-primary-foreground: 40 30% 98%;
+    --sidebar-accent: 40 20% 92%;
+    --sidebar-accent-foreground: 160 40% 15%;
+    --sidebar-border: 40 20% 88%;
+    --sidebar-ring: 166 75% 21%;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+    --background: 160 30% 6%;
+    --foreground: 40 30% 95%;
 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
+    --card: 160 25% 10%;
+    --card-foreground: 40 30% 95%;
 
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 160 25% 10%;
+    --popover-foreground: 40 30% 95%;
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: 166 55% 40%;
+    --primary-foreground: 160 30% 6%;
 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 160 20% 15%;
+    --secondary-foreground: 40 30% 90%;
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 160 20% 18%;
+    --muted-foreground: 40 15% 60%;
 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 43 65% 55%;
+    --accent-foreground: 160 30% 6%;
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 62% 45%;
+    --destructive-foreground: 40 30% 98%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --border: 160 20% 18%;
+    --input: 160 20% 20%;
+    --ring: 166 55% 40%;
+
+    --gold: 43 65% 55%;
+    --gold-light: 43 50% 45%;
+    --gold-glow: 43 70% 50%;
+    --emerald-deep: 166 55% 40%;
+    --emerald-light: 166 45% 50%;
+    --emerald-glow: 166 50% 45%;
+    --cream: 160 15% 12%;
+    --cream-warm: 160 18% 14%;
+    --arabic-black: 40 30% 95%;
+
+    --shadow-soft: 0 4px 20px -4px hsl(0 0% 0% / 0.3);
+    --shadow-card: 0 8px 32px -8px hsl(0 0% 0% / 0.4);
+    --shadow-elevated: 0 16px 48px -12px hsl(0 0% 0% / 0.5);
+    --shadow-gold: 0 4px 24px -4px hsl(43 70% 50% / 0.3);
+
+    --gradient-gold: linear-gradient(135deg, hsl(43 65% 55%), hsl(43 60% 40%));
+    --gradient-emerald: linear-gradient(135deg, hsl(166 55% 40%), hsl(166 45% 50%));
+    --gradient-hero: linear-gradient(180deg, hsl(160 30% 6%) 0%, hsl(160 25% 10%) 100%);
+    --gradient-glass: linear-gradient(135deg, hsl(160 20% 15% / 0.9), hsl(160 20% 12% / 0.7));
+
+    --sidebar-background: 160 25% 8%;
+    --sidebar-foreground: 40 30% 90%;
+    --sidebar-primary: 166 55% 40%;
+    --sidebar-primary-foreground: 160 30% 6%;
+    --sidebar-accent: 160 20% 15%;
+    --sidebar-accent-foreground: 40 30% 90%;
+    --sidebar-border: 160 20% 18%;
+    --sidebar-ring: 166 55% 40%;
   }
 }
 
@@ -100,6 +140,157 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans antialiased;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+
+  .font-arabic {
+    font-family: 'Amiri', serif;
+  }
+}
+
+@layer components {
+  /* Glass morphism card */
+  .glass-card {
+    @apply backdrop-blur-xl border border-border/50;
+    background: var(--gradient-glass);
+    box-shadow: var(--shadow-card);
+  }
+
+  /* Gold shimmer effect */
+  .gold-shimmer {
+    background: linear-gradient(
+      90deg,
+      hsl(var(--gold)) 0%,
+      hsl(var(--gold-light)) 50%,
+      hsl(var(--gold)) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 3s ease-in-out infinite;
+  }
+
+  /* Emerald glow effect */
+  .emerald-glow {
+    box-shadow: 0 0 40px -10px hsl(var(--emerald-glow) / 0.4);
+  }
+
+  /* Gold accent border */
+  .gold-border {
+    border: 1px solid hsl(var(--gold) / 0.3);
+  }
+
+  /* Arabic text styling */
+  .arabic-text {
+    @apply font-arabic text-right leading-loose tracking-wide;
+    direction: rtl;
+  }
+
+  /* Ayah number badge */
+  .ayah-badge {
+    @apply inline-flex items-center justify-center w-8 h-8 rounded-full text-xs font-semibold;
+    background: var(--gradient-emerald);
+    color: hsl(var(--primary-foreground));
+  }
+
+  /* Surah card hover */
+  .surah-card {
+    @apply transition-all duration-300 ease-out;
+  }
+
+  .surah-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-elevated);
+  }
+
+  /* Hero gradient overlay */
+  .hero-overlay {
+    background: linear-gradient(
+      180deg,
+      hsl(var(--background) / 0) 0%,
+      hsl(var(--background) / 0.8) 60%,
+      hsl(var(--background)) 100%
+    );
+  }
+
+  /* Geometric pattern background */
+  .geometric-pattern {
+    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%230D5C4D' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  }
+
+  /* Scroll indicator */
+  .scroll-indicator {
+    @apply w-6 h-10 rounded-full border-2 border-primary/30 flex items-start justify-center p-2;
+  }
+
+  .scroll-indicator::after {
+    content: '';
+    @apply w-1 h-2 bg-primary rounded-full;
+    animation: scroll-bounce 2s ease-in-out infinite;
+  }
+}
+
+@layer utilities {
+  /* Animation keyframes */
+  @keyframes shimmer {
+    0%, 100% { background-position: 200% 0; }
+    50% { background-position: -200% 0; }
+  }
+
+  @keyframes scroll-bounce {
+    0%, 100% { transform: translateY(0); opacity: 1; }
+    50% { transform: translateY(8px); opacity: 0.5; }
+  }
+
+  @keyframes fade-in-up {
+    0% { opacity: 0; transform: translateY(10px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fade-in {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
+  }
+
+  @keyframes gold-pulse {
+    0%, 100% { box-shadow: 0 0 20px -5px hsl(43 70% 50% / 0.15); }
+    50% { box-shadow: 0 0 30px -5px hsl(43 70% 50% / 0.25); }
+  }
+
+  @keyframes slide-in-right {
+    0% { opacity: 0; transform: translateX(20px); }
+    100% { opacity: 1; transform: translateX(0); }
+  }
+
+  .animate-fade-in-up {
+    animation: fade-in-up 0.6s ease-out forwards;
+  }
+
+  .animate-fade-in {
+    animation: fade-in 0.5s ease-out forwards;
+  }
+
+  .animate-gold-pulse {
+    animation: gold-pulse 3s ease-in-out infinite;
+  }
+
+  .animate-slide-in-right {
+    animation: slide-in-right 0.4s ease-out forwards;
+  }
+
+  .animation-delay-100 { animation-delay: 100ms; }
+  .animation-delay-200 { animation-delay: 200ms; }
+  .animation-delay-300 { animation-delay: 300ms; }
+  .animation-delay-400 { animation-delay: 400ms; }
+  .animation-delay-500 { animation-delay: 500ms; }
+
+  /* Reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    .animate-fade-in-up,
+    .animate-fade-in,
+    .animate-gold-pulse,
+    .animate-slide-in-right,
+    .gold-shimmer {
+      animation: none !important;
+    }
   }
 }

@@ -18,8 +18,10 @@ import {
   isSurahCached,
   setCacheTimestamp,
 } from '@/lib/storage';
+import { supabase } from '@/integrations/supabase/client';
 import type { Ayah, Bookmark, Progress, Settings, SearchResults } from '@/lib/schemas';
 import { surahData, dailyAyahs, getDailyAyahIndex } from '@/lib/quranData';
+import { useAuth } from '@/hooks/useAuth';
 
 // Initialize DB on first import
 initDB().catch(console.error);
@@ -102,9 +104,10 @@ export function useDailyAyah() {
   return useAyah(dailyAyahData.surah, dailyAyahData.ayah);
 }
 
-// Hook for bookmarks
+// Hook for bookmarks with cloud sync
 export function useBookmarks() {
   const queryClient = useQueryClient();
+  const { user, isAuthenticated } = useAuth();
 
   const { data: bookmarks = [], ...query } = useQuery({
     queryKey: ['bookmarks'],
@@ -112,17 +115,71 @@ export function useBookmarks() {
     staleTime: 0,
   });
 
+  // Sync cloud bookmarks to local on auth
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      // Sync cloud to local in background
+      const syncBookmarks = async () => {
+        try {
+          const { data: cloudBookmarks } = await supabase
+            .from('bookmarks')
+            .select('surah_number, ayah_number')
+            .eq('user_id', user.id);
+          
+          if (!cloudBookmarks) return;
+          
+          const localBookmarks = await getBookmarks();
+          const localSet = new Set(
+            localBookmarks.map(b => `${b.surahNumber}-${b.ayahNumber}`)
+          );
+
+          // Add cloud bookmarks that don't exist locally
+          for (const b of cloudBookmarks) {
+            if (!localSet.has(`${b.surah_number}-${b.ayah_number}`)) {
+              await addBookmark(b.surah_number, b.ayah_number);
+            }
+          }
+
+          queryClient.invalidateQueries({ queryKey: ['bookmarks'] });
+        } catch (error) {
+          console.error('Failed to sync bookmarks:', error);
+        }
+      };
+      
+      syncBookmarks();
+    }
+  }, [isAuthenticated, user, queryClient]);
+
   const addMutation = useMutation({
-    mutationFn: ({ surahNumber, ayahNumber }: { surahNumber: number; ayahNumber: number }) =>
-      addBookmark(surahNumber, ayahNumber),
+    mutationFn: async ({ surahNumber, ayahNumber }: { surahNumber: number; ayahNumber: number }) => {
+      await addBookmark(surahNumber, ayahNumber);
+      // Sync to cloud if authenticated
+      if (isAuthenticated && user) {
+        await supabase.from('bookmarks').insert({
+          user_id: user.id,
+          surah_number: surahNumber,
+          ayah_number: ayahNumber,
+        });
+      }
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['bookmarks'] });
     },
   });
 
   const removeMutation = useMutation({
-    mutationFn: ({ surahNumber, ayahNumber }: { surahNumber: number; ayahNumber: number }) =>
-      removeBookmark(surahNumber, ayahNumber),
+    mutationFn: async ({ surahNumber, ayahNumber }: { surahNumber: number; ayahNumber: number }) => {
+      await removeBookmark(surahNumber, ayahNumber);
+      // Sync to cloud if authenticated
+      if (isAuthenticated && user) {
+        await supabase
+          .from('bookmarks')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('surah_number', surahNumber)
+          .eq('ayah_number', ayahNumber);
+      }
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['bookmarks'] });
     },

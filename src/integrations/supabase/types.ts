@@ -14,7 +14,117 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      bookmarks: {
+        Row: {
+          ayah_number: number
+          created_at: string
+          id: string
+          surah_number: number
+          user_id: string
+        }
+        Insert: {
+          ayah_number: number
+          created_at?: string
+          id?: string
+          surah_number: number
+          user_id: string
+        }
+        Update: {
+          ayah_number?: number
+          created_at?: string
+          id?: string
+          surah_number?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          display_name: string | null
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      reading_progress: {
+        Row: {
+          id: string
+          last_ayah: number
+          last_surah: number
+          per_surah_progress: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          last_ayah?: number
+          last_surah?: number
+          per_surah_progress?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          last_ayah?: number
+          last_surah?: number
+          per_surah_progress?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_settings: {
+        Row: {
+          font_size_px: number
+          id: string
+          language: string
+          playback_speed: number
+          preferred_reciter: string
+          show_translations: boolean
+          theme: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          font_size_px?: number
+          id?: string
+          language?: string
+          playback_speed?: number
+          preferred_reciter?: string
+          show_translations?: boolean
+          theme?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          font_size_px?: number
+          id?: string
+          language?: string
+          playback_speed?: number
+          preferred_reciter?: string
+          show_translations?: boolean
+          theme?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

@@ -1,7 +1,15 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Book, Search, Bookmark, Settings, Home, Heart, ArrowLeft } from 'lucide-react';
+import { Book, Search, Bookmark, Settings, Home, Heart, ArrowLeft, User, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/hooks/useAuth';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 const navItems = [
   { path: '/', label: 'Home', icon: Home },
@@ -18,6 +26,7 @@ interface HeaderProps {
 
 export function Header({ showBack = false, title }: HeaderProps) {
   const location = useLocation();
+  const { user, isAuthenticated, signOut } = useAuth();
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/50 glass-card">
@@ -66,6 +75,35 @@ export function Header({ showBack = false, title }: HeaderProps) {
               </Link>
             );
           })}
+
+          {/* Auth button */}
+          {isAuthenticated ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="ml-2">
+                  <User className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <div className="px-2 py-1.5 text-sm">
+                  <p className="font-medium">{user?.email}</p>
+                  <p className="text-xs text-muted-foreground">Signed in</p>
+                </div>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => signOut()}>
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Sign out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Link to="/auth">
+              <Button variant="ghost" size="sm" className="ml-2">
+                <User className="h-4 w-4" />
+                <span className="hidden md:inline">Sign in</span>
+              </Button>
+            </Link>
+          )}
         </nav>
       </div>
     </header>

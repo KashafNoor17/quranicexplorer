@@ -58,12 +58,12 @@ export default function BookmarksPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background geometric-pattern">
-      <Header showBack title="Bookmarks" />
+    <div className="min-h-screen bg-background geometric-pattern" role="main">
+      <Header title="Bookmarks" />
 
-      <main className="container px-4 py-8 md:px-6 md:py-12">
+      <main className="container px-4 py-8 md:px-6 md:py-12 animate-page-in">
         {/* Header */}
-        <div className="mb-8 flex items-center justify-between">
+        <div className="mb-8 flex items-center justify-between animate-fade-in-up">
           <div>
             <h1 className="text-3xl font-bold text-foreground mb-2">
               Your Bookmarks
@@ -73,7 +73,7 @@ export default function BookmarksPage() {
             </p>
           </div>
           
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2" role="group" aria-label="Bookmark actions">
             <input
               ref={fileInputRef}
               type="file"
@@ -85,8 +85,10 @@ export default function BookmarksPage() {
               variant="ghost"
               size="sm"
               onClick={() => fileInputRef.current?.click()}
+              className="transition-transform hover:scale-105 focus-ring"
+              aria-label="Import bookmarks from file"
             >
-              <Upload className="h-4 w-4 mr-2" />
+              <Upload className="h-4 w-4 mr-2" aria-hidden="true" />
               Import
             </Button>
             <Button
@@ -94,8 +96,10 @@ export default function BookmarksPage() {
               size="sm"
               onClick={handleExport}
               disabled={bookmarks.length === 0}
+              className="transition-transform hover:scale-105 focus-ring"
+              aria-label="Export bookmarks to file"
             >
-              <Download className="h-4 w-4 mr-2" />
+              <Download className="h-4 w-4 mr-2" aria-hidden="true" />
               Export
             </Button>
           </div>
@@ -103,31 +107,36 @@ export default function BookmarksPage() {
 
         {/* Bookmarks List */}
         {bookmarks.length === 0 ? (
-          <Card>
+          <Card className="animate-fade-in">
             <CardContent className="p-12 text-center">
-              <Bookmark className="mx-auto h-16 w-16 text-muted-foreground mb-4" />
+              <Bookmark className="mx-auto h-16 w-16 text-muted-foreground mb-4" aria-hidden="true" />
               <h3 className="text-xl font-semibold mb-2">No bookmarks yet</h3>
               <p className="text-muted-foreground mb-6">
                 Start reading and bookmark your favorite verses to find them quickly later.
               </p>
               <Link to="/">
-                <Button variant="emerald">
+                <Button variant="emerald" className="transition-transform hover:scale-105">
                   Explore Surahs
                 </Button>
               </Link>
             </CardContent>
           </Card>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-3 stagger-children" role="list" aria-label="Saved bookmarks">
             {bookmarks.map((bookmark) => {
               const surah = surahData.find(s => s.number === bookmark.surahNumber);
               const date = new Date(bookmark.timestamp);
               
               return (
-                <Card key={`${bookmark.surahNumber}-${bookmark.ayahNumber}`} variant="surah">
+                <Card 
+                  key={`${bookmark.surahNumber}-${bookmark.ayahNumber}`} 
+                  variant="surah"
+                  className="transition-transform hover:scale-[1.01]"
+                  role="listitem"
+                >
                   <CardContent className="p-4">
                     <div className="flex items-center gap-4">
-                      <div className="ayah-badge shrink-0">
+                      <div className="ayah-badge shrink-0" aria-label={`Verse ${bookmark.ayahNumber}`}>
                         {bookmark.ayahNumber}
                       </div>
                       
@@ -136,12 +145,12 @@ export default function BookmarksPage() {
                           <span className="font-semibold text-foreground">
                             {surah?.englishName}
                           </span>
-                          <span className="font-arabic text-primary">
+                          <span className="font-arabic text-primary" lang="ar">
                             {surah?.name}
                           </span>
                         </div>
                         <p className="text-xs text-muted-foreground">
-                          Saved {date.toLocaleDateString()}
+                          <time dateTime={date.toISOString()}>Saved {date.toLocaleDateString()}</time>
                         </p>
                       </div>
 
@@ -153,13 +162,19 @@ export default function BookmarksPage() {
                             surahNumber: bookmark.surahNumber,
                             ayahNumber: bookmark.ayahNumber,
                           })}
-                          aria-label="Remove bookmark"
+                          aria-label={`Remove bookmark for ${surah?.englishName} verse ${bookmark.ayahNumber}`}
+                          className="transition-transform hover:scale-105 focus-ring"
                         >
-                          <Trash2 className="h-4 w-4 text-destructive" />
+                          <Trash2 className="h-4 w-4 text-destructive" aria-hidden="true" />
                         </Button>
                         <Link to={`/surah/${bookmark.surahNumber}?ayah=${bookmark.ayahNumber}`}>
-                          <Button variant="ghost" size="icon">
-                            <ArrowRight className="h-4 w-4" />
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            className="transition-transform hover:scale-105 focus-ring"
+                            aria-label={`Go to ${surah?.englishName} verse ${bookmark.ayahNumber}`}
+                          >
+                            <ArrowRight className="h-4 w-4" aria-hidden="true" />
                           </Button>
                         </Link>
                       </div>

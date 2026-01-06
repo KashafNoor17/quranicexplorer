@@ -7,7 +7,7 @@ import { JuzTabs } from '@/components/quran/JuzTabs';
 import { ContinueReading } from '@/components/quran/ContinueReading';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Search, BookOpen, Heart, Wifi, WifiOff } from 'lucide-react';
+import { Search, BookOpen, Heart, Wifi, WifiOff, Columns2 } from 'lucide-react';
 import { useOfflineStatus } from '@/hooks/useQuran';
 
 export default function Index() {
@@ -15,7 +15,7 @@ export default function Index() {
   const { isOnline, cachedSurahs } = useOfflineStatus();
 
   return (
-    <div className="min-h-screen bg-background geometric-pattern">
+    <div className="min-h-screen bg-background geometric-pattern" role="main">
       <Header />
 
       <main className="container px-4 py-8 md:px-6 md:py-12">
@@ -46,13 +46,19 @@ export default function Index() {
           
           <div className="flex flex-wrap items-center justify-center gap-4 animate-fade-in-up animation-delay-200">
             <Link to="/search">
-              <Button variant="hero" size="xl">
+              <Button variant="hero" size="xl" className="transition-transform hover:scale-105 active:scale-95">
                 <Search className="h-5 w-5" />
                 Search All Verses
               </Button>
             </Link>
+            <Link to="/compare">
+              <Button variant="glass" size="xl" className="transition-transform hover:scale-105 active:scale-95">
+                <Columns2 className="h-5 w-5" />
+                Compare Translations
+              </Button>
+            </Link>
             <Link to="/duas">
-              <Button variant="glass" size="xl">
+              <Button variant="glass" size="xl" className="transition-transform hover:scale-105 active:scale-95">
                 <Heart className="h-5 w-5" />
                 Quranic Duas
               </Button>

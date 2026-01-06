@@ -1,4 +1,4 @@
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Book, Search, Bookmark, Settings, Home, Heart, ArrowLeft, User, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -24,25 +24,49 @@ interface HeaderProps {
   title?: string;
 }
 
-export function Header({ showBack = false, title }: HeaderProps) {
+export function Header({ showBack, title }: HeaderProps) {
   const location = useLocation();
+  const navigate = useNavigate();
   const { user, isAuthenticated, signOut } = useAuth();
+  
+  // Show back button on all pages except homepage
+  const isHomePage = location.pathname === '/';
+
+  const handleBack = () => {
+    // Use browser history to go back
+    if (window.history.length > 1) {
+      navigate(-1);
+    } else {
+      navigate('/');
+    }
+  };
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/50 glass-card">
+    <header 
+      className="sticky top-0 z-50 w-full border-b border-border/50 glass-card"
+      role="banner"
+    >
       <div className="container flex h-16 items-center justify-between px-4 md:px-6">
         {/* Left section */}
         <div className="flex items-center gap-4">
-          {showBack && (
-            <Link to="/">
-              <Button variant="ghost" size="icon" className="shrink-0" aria-label="Go back">
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-            </Link>
+          {!isHomePage && (
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="shrink-0 transition-transform hover:scale-105 active:scale-95 focus-ring" 
+              aria-label="Go back to previous page"
+              onClick={handleBack}
+            >
+              <ArrowLeft className="h-5 w-5" aria-hidden="true" />
+            </Button>
           )}
-          <Link to="/" className="flex items-center gap-3">
+          <Link 
+            to="/" 
+            className="flex items-center gap-3 focus-ring rounded-lg"
+            aria-label="Quran Explorer - Go to homepage"
+          >
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-emerald-light shadow-soft">
-              <Book className="h-5 w-5 text-primary-foreground" />
+              <Book className="h-5 w-5 text-primary-foreground" aria-hidden="true" />
             </div>
             <div className="hidden md:block">
               <h1 className="text-lg font-bold text-foreground">
@@ -54,7 +78,11 @@ export function Header({ showBack = false, title }: HeaderProps) {
         </div>
 
         {/* Navigation */}
-        <nav className="flex items-center gap-1 md:gap-2">
+        <nav 
+          className="flex items-center gap-1 md:gap-2"
+          role="navigation"
+          aria-label="Main navigation"
+        >
           {navItems.map((item) => {
             const isActive = location.pathname === item.path;
             const Icon = item.icon;
@@ -65,12 +93,14 @@ export function Header({ showBack = false, title }: HeaderProps) {
                   variant={isActive ? 'default' : 'ghost'}
                   size="sm"
                   className={cn(
-                    'transition-all',
+                    'transition-all focus-ring',
                     isActive && 'emerald-glow'
                   )}
+                  aria-current={isActive ? 'page' : undefined}
                 >
-                  <Icon className="h-4 w-4" />
+                  <Icon className="h-4 w-4" aria-hidden="true" />
                   <span className="hidden md:inline">{item.label}</span>
+                  <span className="sr-only md:hidden">{item.label}</span>
                 </Button>
               </Link>
             );
@@ -80,8 +110,13 @@ export function Header({ showBack = false, title }: HeaderProps) {
           {isAuthenticated ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="ml-2">
-                  <User className="h-4 w-4" />
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="ml-2 focus-ring"
+                  aria-label="User menu"
+                >
+                  <User className="h-4 w-4" aria-hidden="true" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
@@ -91,16 +126,17 @@ export function Header({ showBack = false, title }: HeaderProps) {
                 </div>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => signOut()}>
-                  <LogOut className="h-4 w-4 mr-2" />
+                  <LogOut className="h-4 w-4 mr-2" aria-hidden="true" />
                   Sign out
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
             <Link to="/auth">
-              <Button variant="ghost" size="sm" className="ml-2">
-                <User className="h-4 w-4" />
+              <Button variant="ghost" size="sm" className="ml-2 focus-ring">
+                <User className="h-4 w-4" aria-hidden="true" />
                 <span className="hidden md:inline">Sign in</span>
+                <span className="sr-only md:hidden">Sign in</span>
               </Button>
             </Link>
           )}

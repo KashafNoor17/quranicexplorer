@@ -45,10 +45,10 @@ export default function SurahPage() {
 
   if (!surah) {
     return (
-      <div className="min-h-screen bg-background">
-        <Header showBack title="Surah Not Found" />
-        <main className="container px-4 py-12 text-center">
-          <AlertCircle className="mx-auto h-16 w-16 text-destructive mb-4" />
+      <div className="min-h-screen bg-background" role="main">
+        <Header title="Surah Not Found" />
+        <main className="container px-4 py-12 text-center animate-page-in">
+          <AlertCircle className="mx-auto h-16 w-16 text-destructive mb-4" aria-hidden="true" />
           <h1 className="text-2xl font-bold">Surah not found</h1>
           <p className="text-muted-foreground">The requested Surah does not exist.</p>
         </main>
@@ -57,13 +57,17 @@ export default function SurahPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background geometric-pattern">
-      <Header showBack title={surah.englishName} />
+    <div className="min-h-screen bg-background geometric-pattern" role="main">
+      <Header title={surah.englishName} />
 
-      <main className="container px-4 py-8 md:px-6 md:py-12 pb-32">
+      <main className="container px-4 py-8 md:px-6 md:py-12 pb-32 animate-page-in">
         {/* Surah Header */}
-        <div className="mb-8 text-center">
-          <h1 className="text-4xl md:text-5xl font-arabic text-primary mb-2">
+        <header className="mb-8 text-center animate-fade-in-up">
+          <h1 
+            className="text-4xl md:text-5xl font-arabic text-primary mb-2"
+            lang="ar"
+            dir="rtl"
+          >
             {surah.name}
           </h1>
           <h2 className="text-2xl font-bold text-foreground mb-2">
@@ -72,12 +76,17 @@ export default function SurahPage() {
           <p className="text-muted-foreground">
             {surah.englishNameTranslation} • {surah.ayahCount} Ayahs • {surah.revelationPlace}
           </p>
-        </div>
+        </header>
 
         {/* Bismillah */}
         {surahNumber !== 1 && surahNumber !== 9 && (
-          <div className="mb-8 text-center">
-            <p className="text-2xl md:text-3xl font-arabic text-primary">
+          <div className="mb-8 text-center animate-fade-in-up animation-delay-100">
+            <p 
+              className="text-2xl md:text-3xl font-arabic text-primary"
+              lang="ar"
+              dir="rtl"
+              aria-label="Bismillah - In the name of Allah, the Most Gracious, the Most Merciful"
+            >
               بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
             </p>
             <p className="text-sm text-muted-foreground mt-2">
@@ -88,33 +97,37 @@ export default function SurahPage() {
 
         {/* Loading State */}
         {isLoading && (
-          <div className="space-y-4">
+          <div className="space-y-4 animate-pulse-soft" role="status" aria-label="Loading verses">
             {Array.from({ length: 5 }).map((_, i) => (
               <Card key={i}>
                 <CardContent className="p-6 space-y-4">
                   <div className="flex items-center gap-4">
-                    <Skeleton className="h-12 w-12 rounded-full" />
+                    <Skeleton className="h-12 w-12 rounded-full loading-shimmer" />
                     <div className="space-y-2 flex-1">
-                      <Skeleton className="h-8 w-full" />
-                      <Skeleton className="h-4 w-3/4" />
+                      <Skeleton className="h-8 w-full loading-shimmer" />
+                      <Skeleton className="h-4 w-3/4 loading-shimmer" />
                     </div>
                   </div>
                 </CardContent>
               </Card>
             ))}
+            <span className="sr-only">Loading verses, please wait...</span>
           </div>
         )}
 
         {/* Error State */}
         {error && (
-          <Card className="border-destructive">
+          <Card className="border-destructive animate-fade-in" role="alert">
             <CardContent className="p-6 text-center">
-              <AlertCircle className="mx-auto h-12 w-12 text-destructive mb-4" />
+              <AlertCircle className="mx-auto h-12 w-12 text-destructive mb-4" aria-hidden="true" />
               <h3 className="text-lg font-semibold mb-2">Failed to load Surah</h3>
               <p className="text-muted-foreground mb-4">
                 {(error as Error).message || 'An error occurred while loading the Surah.'}
               </p>
-              <Button onClick={() => window.location.reload()}>
+              <Button 
+                onClick={() => window.location.reload()}
+                className="focus-ring"
+              >
                 Try Again
               </Button>
             </CardContent>
@@ -123,9 +136,15 @@ export default function SurahPage() {
 
         {/* Ayahs */}
         {ayahs && (
-          <div className="space-y-4">
-            {ayahs.map((ayah) => (
-              <div key={ayah.ayahNumber} id={`ayah-${ayah.ayahNumber}`}>
+          <div className="space-y-4" role="list" aria-label="Verses">
+            {ayahs.map((ayah, index) => (
+              <div 
+                key={ayah.ayahNumber} 
+                id={`ayah-${ayah.ayahNumber}`}
+                role="listitem"
+                className="animate-fade-in"
+                style={{ animationDelay: `${Math.min(index * 30, 300)}ms` }}
+              >
                 <AyahCard
                   ayah={ayah}
                   isBookmarked={isBookmarked(surahNumber, ayah.ayahNumber)}

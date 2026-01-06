@@ -4,6 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { ScrollToTop } from "@/components/layout/ScrollToTop";
 import Index from "./pages/Index";
 import SurahPage from "./pages/SurahPage";
 import SearchPage from "./pages/SearchPage";
@@ -11,6 +12,7 @@ import BookmarksPage from "./pages/BookmarksPage";
 import DuasPage from "./pages/DuasPage";
 import SettingsPage from "./pages/SettingsPage";
 import AuthPage from "./pages/AuthPage";
+import ComparisonPage from "./pages/ComparisonPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -51,10 +53,12 @@ const App = () => {
         <Toaster />
         <Sonner />
         <BrowserRouter>
+          <ScrollToTop />
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/surah/:id" element={<SurahPage />} />
             <Route path="/search" element={<SearchPage />} />
+            <Route path="/compare" element={<ComparisonPage />} />
             <Route path="/bookmarks" element={<BookmarksPage />} />
             <Route path="/duas" element={<DuasPage />} />
             <Route path="/settings" element={<SettingsPage />} />

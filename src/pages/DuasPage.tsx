@@ -62,14 +62,14 @@ export default function DuasPage() {
   }, [filteredDuas, groupBy]);
 
   return (
-    <div className="min-h-screen bg-background geometric-pattern">
-      <Header showBack title="Quranic Duas" />
+    <div className="min-h-screen bg-background geometric-pattern" role="main">
+      <Header title="Quranic Duas" />
 
-      <main className="container px-4 py-8 md:px-6 md:py-12">
+      <main className="container px-4 py-8 md:px-6 md:py-12 animate-page-in">
         {/* Header */}
-        <div className="mb-8 text-center">
+        <div className="mb-8 text-center animate-fade-in-up">
           <div className="inline-flex items-center gap-2 mb-4 px-4 py-2 rounded-full bg-gold/10 text-sm text-gold">
-            <Heart className="h-4 w-4" />
+            <Heart className="h-4 w-4" aria-hidden="true" />
             <span>Supplications from the Quran</span>
           </div>
           <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
@@ -82,15 +82,16 @@ export default function DuasPage() {
         </div>
 
         {/* Search and Filters */}
-        <div className="max-w-2xl mx-auto mb-8 space-y-4">
+        <div className="max-w-2xl mx-auto mb-8 space-y-4 animate-fade-in-up animation-delay-100">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" aria-hidden="true" />
             <Input
-              type="text"
+              type="search"
               placeholder="Search duas by theme or surah..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
+              className="pl-10 focus-ring"
+              aria-label="Search duas"
             />
           </div>
 
@@ -128,7 +129,7 @@ export default function DuasPage() {
         </div>
 
         {/* Duas List */}
-        <div className="max-w-3xl mx-auto space-y-4">
+        <div className="max-w-3xl mx-auto space-y-4 stagger-children" role="list" aria-label="Quranic duas">
           {groupBy === 'surah' && groupedDuas ? (
             Object.entries(groupedDuas).map(([surahName, duas]) => (
               <div key={surahName} className="space-y-3">
@@ -176,7 +177,7 @@ function DuaCard({ dua }: DuaCardProps) {
   const bookmarked = isBookmarked(dua.surah, dua.ayah);
 
   return (
-    <Card variant="ayah" className="overflow-hidden">
+    <Card variant="ayah" className="overflow-hidden transition-transform hover:scale-[1.01]" role="listitem">
       <CardContent className="p-6">
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
@@ -189,6 +190,9 @@ function DuaCard({ dua }: DuaCardProps) {
             <Button
               variant={bookmarked ? 'gold' : 'ghost'}
               size="icon"
+              className="transition-transform hover:scale-105 active:scale-95 focus-ring"
+              aria-label={bookmarked ? 'Remove bookmark' : 'Add bookmark'}
+              aria-pressed={bookmarked}
               onClick={() => {
                 if (bookmarked) {
                   removeBookmark({ surahNumber: dua.surah, ayahNumber: dua.ayah });
@@ -198,9 +202,9 @@ function DuaCard({ dua }: DuaCardProps) {
               }}
             >
               {bookmarked ? (
-                <BookmarkCheck className="h-4 w-4" />
+                <BookmarkCheck className="h-4 w-4" aria-hidden="true" />
               ) : (
-                <Bookmark className="h-4 w-4" />
+                <Bookmark className="h-4 w-4" aria-hidden="true" />
               )}
             </Button>
           </div>
@@ -208,7 +212,11 @@ function DuaCard({ dua }: DuaCardProps) {
 
         {/* Arabic Text */}
         {ayah && (
-          <p className="arabic-text text-xl md:text-2xl leading-[2.5] mb-4 text-foreground">
+          <p 
+            className="arabic-text text-xl md:text-2xl leading-[2.5] mb-4 text-foreground"
+            lang="ar"
+            dir="rtl"
+          >
             {ayah.arabicText}
           </p>
         )}
@@ -217,12 +225,12 @@ function DuaCard({ dua }: DuaCardProps) {
         {ayah && (
           <div className="space-y-3 border-t border-border/50 pt-4">
             {ayah.englishText && (
-              <p className="text-sm leading-relaxed text-foreground/80">
+              <p className="text-sm leading-relaxed text-foreground/80" lang="en">
                 {ayah.englishText}
               </p>
             )}
             {ayah.urduText && (
-              <p className="text-sm leading-relaxed text-foreground/70 font-arabic" dir="rtl">
+              <p className="text-sm leading-relaxed text-foreground/70 font-arabic" dir="rtl" lang="ur">
                 {ayah.urduText}
               </p>
             )}

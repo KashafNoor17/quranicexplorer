@@ -1,14 +1,18 @@
 import { useParams, useSearchParams } from 'react-router-dom';
 import { useEffect } from 'react';
 import { Header, Footer } from '@/components/layout/Header';
-import { AyahCard } from '@/components/quran/AyahCard';
-import { AudioControls } from '@/components/quran/AudioControls';
+import { EnhancedAyahCard } from '@/components/quran/EnhancedAyahCard';
+import { EnhancedAudioControls } from '@/components/quran/EnhancedAudioControls';
+import { QuickNavigation } from '@/components/quran/QuickNavigation';
+import { FontSizeControl } from '@/components/ui/FontSizeControl';
 import { useSurah, useBookmarks, useProgress, useSettings, surahData } from '@/hooks/useQuran';
-import { useAudioPlayer } from '@/hooks/useAudioPlayer';
+import { usePersistentAudioPlayer } from '@/hooks/usePersistentAudioPlayer';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent } from '@/components/ui/card';
-import { AlertCircle, Download } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 
 export default function SurahPage() {
   const { id } = useParams<{ id: string }>();
@@ -20,9 +24,9 @@ export default function SurahPage() {
   const { data: ayahs, isLoading, error } = useSurah(surahNumber);
   const { isBookmarked, addBookmark, removeBookmark } = useBookmarks();
   const { updateLastRead } = useProgress();
-  const { settings } = useSettings();
+  const { settings, updateSettings } = useSettings();
 
-  const audioPlayer = useAudioPlayer(ayahs || [], (ayahNumber) => {
+  const audioPlayer = usePersistentAudioPlayer(ayahs || [], (ayahNumber) => {
     updateLastRead({ surahNumber, ayahNumber });
   });
 
@@ -73,9 +77,29 @@ export default function SurahPage() {
           <h2 className="text-2xl font-bold text-foreground mb-2">
             {surah.englishName}
           </h2>
-          <p className="text-muted-foreground">
+          <p className="text-muted-foreground mb-4">
             {surah.englishNameTranslation} • {surah.ayahCount} Ayahs • {surah.revelationPlace}
           </p>
+          
+          {/* Controls toolbar */}
+          <div className="flex flex-wrap items-center justify-center gap-3 mt-4">
+            <QuickNavigation />
+            <FontSizeControl 
+              fontSize={settings.fontSizePx} 
+              onFontSizeChange={(size) => updateSettings({ fontSizePx: size })} 
+            />
+            <div className="flex items-center gap-2">
+              <Switch
+                id="show-translations"
+                checked={settings.showTranslations}
+                onCheckedChange={(checked) => updateSettings({ showTranslations: checked })}
+                aria-label="Toggle translations"
+              />
+              <Label htmlFor="show-translations" className="text-sm cursor-pointer">
+                Translations
+              </Label>
+            </div>
+          </div>
         </header>
 
         {/* Bismillah */}
@@ -142,13 +166,14 @@ export default function SurahPage() {
                 key={ayah.ayahNumber} 
                 id={`ayah-${ayah.ayahNumber}`}
                 role="listitem"
-                className="animate-fade-in"
+                className="animate-fade-in scroll-mt-24"
                 style={{ animationDelay: `${Math.min(index * 30, 300)}ms` }}
               >
-                <AyahCard
+                <EnhancedAyahCard
                   ayah={ayah}
                   isBookmarked={isBookmarked(surahNumber, ayah.ayahNumber)}
                   isPlaying={audioPlayer.currentAyah === ayah.ayahNumber && audioPlayer.isPlaying}
+                  isLoading={audioPlayer.currentAyah === ayah.ayahNumber && audioPlayer.isLoading}
                   showTranslations={settings.showTranslations}
                   fontSize={settings.fontSizePx}
                   onToggleBookmark={() => {
@@ -169,7 +194,7 @@ export default function SurahPage() {
 
       {/* Audio Controls */}
       {ayahs && (
-        <AudioControls
+        <EnhancedAudioControls
           isPlaying={audioPlayer.isPlaying}
           isPaused={audioPlayer.isPaused}
           currentAyah={audioPlayer.currentAyah}
@@ -177,6 +202,8 @@ export default function SurahPage() {
           duration={audioPlayer.duration}
           playbackSpeed={audioPlayer.playbackSpeed}
           totalAyahs={ayahs.length}
+          isLoading={audioPlayer.isLoading}
+          isBuffering={audioPlayer.isBuffering}
           onPlayPause={audioPlayer.togglePlayPause}
           onPrevious={() => {
             if (audioPlayer.currentAyah && audioPlayer.currentAyah > 1) {
@@ -190,6 +217,7 @@ export default function SurahPage() {
           }}
           onSeek={audioPlayer.seek}
           onSpeedChange={audioPlayer.setPlaybackSpeed}
+          onStop={audioPlayer.stop}
         />
       )}
 

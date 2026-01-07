@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Header, Footer } from '@/components/layout/Header';
-import { DailyAyah } from '@/components/quran/DailyAyah';
+import { EnhancedDailyAyah } from '@/components/quran/EnhancedDailyAyah';
 import { SurahList } from '@/components/quran/SurahList';
 import { JuzTabs } from '@/components/quran/JuzTabs';
 import { ContinueReading } from '@/components/quran/ContinueReading';
+import { QuickNavigation } from '@/components/quran/QuickNavigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Search, BookOpen, Heart, Wifi, WifiOff, Columns2 } from 'lucide-react';
@@ -46,20 +47,21 @@ export default function Index() {
           
           <div className="flex flex-wrap items-center justify-center gap-4 animate-fade-in-up animation-delay-200">
             <Link to="/search">
-              <Button variant="hero" size="xl" className="transition-transform hover:scale-105 active:scale-95">
-                <Search className="h-5 w-5" />
+              <Button variant="hero" size="xl" className="transition-transform hover:scale-105 active:scale-95 focus-ring">
+                <Search className="h-5 w-5" aria-hidden="true" />
                 Search All Verses
               </Button>
             </Link>
+            <QuickNavigation />
             <Link to="/compare">
-              <Button variant="glass" size="xl" className="transition-transform hover:scale-105 active:scale-95">
-                <Columns2 className="h-5 w-5" />
+              <Button variant="glass" size="xl" className="transition-transform hover:scale-105 active:scale-95 focus-ring">
+                <Columns2 className="h-5 w-5" aria-hidden="true" />
                 Compare Translations
               </Button>
             </Link>
             <Link to="/duas">
-              <Button variant="glass" size="xl" className="transition-transform hover:scale-105 active:scale-95">
-                <Heart className="h-5 w-5" />
+              <Button variant="glass" size="xl" className="transition-transform hover:scale-105 active:scale-95 focus-ring">
+                <Heart className="h-5 w-5" aria-hidden="true" />
                 Quranic Duas
               </Button>
             </Link>
@@ -72,11 +74,11 @@ export default function Index() {
         </section>
 
         {/* Daily Ayah */}
-        <section className="mb-12 animate-fade-in-up animation-delay-400">
-          <h2 className="text-2xl font-bold text-foreground mb-4 flex items-center gap-2">
+        <section className="mb-12 animate-fade-in-up animation-delay-400" aria-labelledby="daily-ayah-heading">
+          <h2 id="daily-ayah-heading" className="text-2xl font-bold text-foreground mb-4 flex items-center gap-2">
             ✨ Ayah of the Day
           </h2>
-          <DailyAyah />
+          <EnhancedDailyAyah />
         </section>
 
         {/* Feature Cards */}

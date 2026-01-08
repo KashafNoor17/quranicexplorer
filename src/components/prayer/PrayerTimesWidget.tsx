@@ -1,10 +1,11 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
-import { MapPin, RefreshCw, Bell, BellOff, Clock, Sun, Sunrise, Sunset, Moon } from 'lucide-react';
+import { MapPin, RefreshCw, Bell, BellOff, Clock, Sun, Sunrise, Sunset, Moon, Volume2, VolumeX } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
 
 interface PrayerTimes {
   Fajr: string;
@@ -42,6 +43,15 @@ const PRAYER_NAMES_AR = {
   Isha: 'العشاء',
 };
 
+// Public domain Azan audio URL
+const AZAN_AUDIO_URL = 'https://www.islamcan.com/audio/adhan/azan1.mp3';
+const AZAN_FAJR_AUDIO_URL = 'https://www.islamcan.com/audio/adhan/azan1.mp3';
+
+// Storage keys
+const NOTIFICATIONS_KEY = 'prayer-notifications-enabled';
+const AZAN_KEY = 'prayer-azan-enabled';
+const PLAYED_PRAYERS_KEY = 'played-prayers-today';
+
 async function fetchPrayerTimes(coords: Coordinates): Promise<PrayerTimes | PrayerTimesError> {
   try {
     const today = new Date();
@@ -68,12 +78,12 @@ async function fetchPrayerTimes(coords: Coordinates): Promise<PrayerTimes | Pray
       Maghrib: timings.Maghrib,
       Isha: timings.Isha,
     };
-  } catch (error) {
+  } catch {
     return { error: 'Network error. Please try again.' };
   }
 }
 
-function getNextPrayer(prayerTimes: PrayerTimes): { name: string; time: string; isNext: boolean }[] {
+function getNextPrayer(prayerTimes: PrayerTimes): { name: string; time: string; isNext: boolean; minutes: number }[] {
   const now = new Date();
   const currentMinutes = now.getHours() * 60 + now.getMinutes();
 
@@ -90,6 +100,7 @@ function getNextPrayer(prayerTimes: PrayerTimes): { name: string; time: string; 
   return prayers.map((p, i) => ({
     name: p.name,
     time: p.time,
+    minutes: p.minutes,
     isNext: i === nextPrayerIndex,
   }));
 }
@@ -114,14 +125,190 @@ function formatTimeUntil(targetTime: string): string {
   return `${diffMinutes}m`;
 }
 
+// Get today's date string for tracking played prayers
+function getTodayKey(): string {
+  const now = new Date();
+  return `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
+}
+
+// Get played prayers from localStorage
+function getPlayedPrayers(): Set<string> {
+  try {
+    const stored = localStorage.getItem(PLAYED_PRAYERS_KEY);
+    if (stored) {
+      const data = JSON.parse(stored);
+      if (data.date === getTodayKey()) {
+        return new Set(data.prayers);
+      }
+    }
+  } catch {
+    // Ignore errors
+  }
+  return new Set();
+}
+
+// Save played prayer to localStorage
+function markPrayerPlayed(prayerName: string): void {
+  try {
+    const played = getPlayedPrayers();
+    played.add(prayerName);
+    localStorage.setItem(PLAYED_PRAYERS_KEY, JSON.stringify({
+      date: getTodayKey(),
+      prayers: Array.from(played),
+    }));
+  } catch {
+    // Ignore errors
+  }
+}
+
 export function PrayerTimesWidget() {
   const [prayerTimes, setPrayerTimes] = useState<PrayerTimes | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [location, setLocation] = useState<Coordinates | null>(null);
   const [locationName, setLocationName] = useState<string>('');
-  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(() => {
+    try {
+      return localStorage.getItem(NOTIFICATIONS_KEY) === 'true';
+    } catch {
+      return false;
+    }
+  });
+  const [azanEnabled, setAzanEnabled] = useState(() => {
+    try {
+      return localStorage.getItem(AZAN_KEY) === 'true';
+    } catch {
+      return false;
+    }
+  });
   const [timeUntilNext, setTimeUntilNext] = useState<string>('');
+  const [isPlayingAzan, setIsPlayingAzan] = useState(false);
+  
+  const azanAudioRef = useRef<HTMLAudioElement | null>(null);
+  const checkIntervalRef = useRef<number | null>(null);
+  const { toast } = useToast();
+
+  // Initialize audio element
+  useEffect(() => {
+    azanAudioRef.current = new Audio();
+    azanAudioRef.current.preload = 'none';
+    
+    return () => {
+      if (azanAudioRef.current) {
+        azanAudioRef.current.pause();
+        azanAudioRef.current = null;
+      }
+    };
+  }, []);
+
+  // Play Azan audio
+  const playAzan = useCallback((prayerName: string) => {
+    if (!azanAudioRef.current || !azanEnabled) return;
+    
+    // Check if already played today for this prayer
+    const played = getPlayedPrayers();
+    if (played.has(prayerName)) return;
+
+    const audioUrl = prayerName === 'Fajr' ? AZAN_FAJR_AUDIO_URL : AZAN_AUDIO_URL;
+    azanAudioRef.current.src = audioUrl;
+    setIsPlayingAzan(true);
+    
+    azanAudioRef.current.play()
+      .then(() => {
+        markPrayerPlayed(prayerName);
+        toast({
+          title: `🕌 ${prayerName} Prayer Time`,
+          description: `It's time for ${prayerName} prayer. ${PRAYER_NAMES_AR[prayerName as keyof typeof PRAYER_NAMES_AR]}`,
+        });
+      })
+      .catch((err) => {
+        console.error('Failed to play Azan:', err);
+        setIsPlayingAzan(false);
+      });
+    
+    azanAudioRef.current.onended = () => {
+      setIsPlayingAzan(false);
+    };
+  }, [azanEnabled, toast]);
+
+  // Stop Azan
+  const stopAzan = useCallback(() => {
+    if (azanAudioRef.current) {
+      azanAudioRef.current.pause();
+      azanAudioRef.current.currentTime = 0;
+      setIsPlayingAzan(false);
+    }
+  }, []);
+
+  // Show browser notification
+  const showNotification = useCallback((prayerName: string, time: string) => {
+    if (!notificationsEnabled || Notification.permission !== 'granted') return;
+    
+    const played = getPlayedPrayers();
+    if (played.has(`notif-${prayerName}`)) return;
+    
+    try {
+      new Notification(`🕌 ${prayerName} Prayer Time`, {
+        body: `It's ${time} - time for ${prayerName} prayer`,
+        icon: '/favicon.ico',
+        tag: `prayer-${prayerName}`,
+        requireInteraction: true,
+      });
+      markPrayerPlayed(`notif-${prayerName}`);
+    } catch (err) {
+      console.error('Failed to show notification:', err);
+    }
+  }, [notificationsEnabled]);
+
+  // Check prayer times and trigger alerts
+  useEffect(() => {
+    if (!prayerTimes || (!notificationsEnabled && !azanEnabled)) {
+      if (checkIntervalRef.current) {
+        clearInterval(checkIntervalRef.current);
+        checkIntervalRef.current = null;
+      }
+      return;
+    }
+
+    const checkPrayerTime = () => {
+      const now = new Date();
+      const currentMinutes = now.getHours() * 60 + now.getMinutes();
+      const currentSeconds = now.getSeconds();
+      
+      // Only check at the start of each minute
+      if (currentSeconds > 5) return;
+
+      const prayers = getNextPrayer(prayerTimes);
+      
+      for (const prayer of prayers) {
+        // Skip Sunrise - it's not a prayer time for Azan
+        if (prayer.name === 'Sunrise') continue;
+        
+        // Check if current time matches prayer time (within 1 minute window)
+        if (Math.abs(prayer.minutes - currentMinutes) <= 1) {
+          if (azanEnabled) {
+            playAzan(prayer.name);
+          }
+          if (notificationsEnabled) {
+            showNotification(prayer.name, prayer.time);
+          }
+          break;
+        }
+      }
+    };
+
+    // Check immediately
+    checkPrayerTime();
+    
+    // Check every 30 seconds
+    checkIntervalRef.current = window.setInterval(checkPrayerTime, 30000);
+
+    return () => {
+      if (checkIntervalRef.current) {
+        clearInterval(checkIntervalRef.current);
+      }
+    };
+  }, [prayerTimes, notificationsEnabled, azanEnabled, playAzan, showNotification]);
 
   const fetchLocation = useCallback(async () => {
     setIsLoading(true);
@@ -188,21 +375,81 @@ export function PrayerTimesWidget() {
       return;
     }
 
-    if (Notification.permission === 'denied') {
-      setError('Notification permission denied');
-      return;
-    }
-
-    if (Notification.permission === 'default') {
-      const permission = await Notification.requestPermission();
-      if (permission !== 'granted') {
-        setError('Notification permission denied');
+    if (!notificationsEnabled) {
+      if (Notification.permission === 'denied') {
+        toast({
+          title: 'Permission Denied',
+          description: 'Please enable notifications in your browser settings.',
+          variant: 'destructive',
+        });
         return;
+      }
+
+      if (Notification.permission === 'default') {
+        const permission = await Notification.requestPermission();
+        if (permission !== 'granted') {
+          toast({
+            title: 'Permission Required',
+            description: 'Notification permission is required for prayer alerts.',
+            variant: 'destructive',
+          });
+          return;
+        }
       }
     }
 
-    setNotificationsEnabled(!notificationsEnabled);
-  }, [notificationsEnabled]);
+    const newValue = !notificationsEnabled;
+    setNotificationsEnabled(newValue);
+    localStorage.setItem(NOTIFICATIONS_KEY, String(newValue));
+    
+    toast({
+      title: newValue ? 'Notifications Enabled' : 'Notifications Disabled',
+      description: newValue 
+        ? 'You will receive alerts when prayer time arrives.' 
+        : 'Prayer time notifications have been turned off.',
+    });
+  }, [notificationsEnabled, toast]);
+
+  const toggleAzan = useCallback(() => {
+    if (isPlayingAzan) {
+      stopAzan();
+      return;
+    }
+    
+    const newValue = !azanEnabled;
+    setAzanEnabled(newValue);
+    localStorage.setItem(AZAN_KEY, String(newValue));
+    
+    toast({
+      title: newValue ? '🔊 Azan Sound Enabled' : '🔇 Azan Sound Disabled',
+      description: newValue 
+        ? 'Azan will play automatically at prayer times.' 
+        : 'Azan sounds have been turned off.',
+    });
+    
+    // Play a short preview if enabling
+    if (newValue && azanAudioRef.current) {
+      azanAudioRef.current.src = AZAN_AUDIO_URL;
+      azanAudioRef.current.volume = 0.5;
+      azanAudioRef.current.play()
+        .then(() => {
+          setTimeout(() => {
+            if (azanAudioRef.current) {
+              azanAudioRef.current.pause();
+              azanAudioRef.current.currentTime = 0;
+              azanAudioRef.current.volume = 1;
+            }
+          }, 3000); // Play 3 second preview
+        })
+        .catch(() => {
+          toast({
+            title: 'Audio Error',
+            description: 'Could not play Azan. Please check your browser settings.',
+            variant: 'destructive',
+          });
+        });
+    }
+  }, [azanEnabled, isPlayingAzan, stopAzan, toast]);
 
   // Update countdown timer
   useEffect(() => {
@@ -237,7 +484,28 @@ export function PrayerTimesWidget() {
             <Clock className="h-5 w-5 text-primary" aria-hidden="true" />
             Prayer Times
           </CardTitle>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
+            {/* Azan Sound Toggle */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleAzan}
+              className={cn(
+                "h-8 w-8 transition-all",
+                isPlayingAzan && "animate-pulse"
+              )}
+              aria-label={isPlayingAzan ? 'Stop Azan' : azanEnabled ? 'Disable Azan sound' : 'Enable Azan sound'}
+            >
+              {isPlayingAzan ? (
+                <VolumeX className="h-4 w-4 text-primary" />
+              ) : azanEnabled ? (
+                <Volume2 className="h-4 w-4 text-primary" />
+              ) : (
+                <VolumeX className="h-4 w-4 text-muted-foreground" />
+              )}
+            </Button>
+            
+            {/* Notification Toggle */}
             <Button
               variant="ghost"
               size="icon"
@@ -251,6 +519,8 @@ export function PrayerTimesWidget() {
                 <BellOff className="h-4 w-4 text-muted-foreground" />
               )}
             </Button>
+            
+            {/* Refresh Button */}
             <Button
               variant="ghost"
               size="icon"
@@ -267,6 +537,11 @@ export function PrayerTimesWidget() {
           <div className="flex items-center gap-1 text-sm text-muted-foreground mt-1">
             <MapPin className="h-3 w-3" aria-hidden="true" />
             <span>{locationName}</span>
+            {(notificationsEnabled || azanEnabled) && (
+              <Badge variant="secondary" className="ml-2 text-xs">
+                {azanEnabled && notificationsEnabled ? 'Azan + Alerts' : azanEnabled ? 'Azan' : 'Alerts'}
+              </Badge>
+            )}
           </div>
         )}
       </CardHeader>
@@ -342,6 +617,24 @@ export function PrayerTimesWidget() {
                 </div>
               );
             })}
+          </div>
+        )}
+        
+        {/* Azan playing indicator */}
+        {isPlayingAzan && (
+          <div className="mt-4 p-3 rounded-lg bg-gold/10 border border-gold/20 flex items-center justify-between animate-pulse">
+            <div className="flex items-center gap-2">
+              <Volume2 className="h-4 w-4 text-gold" />
+              <span className="text-sm font-medium text-gold">Playing Azan...</span>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={stopAzan}
+              className="text-gold hover:text-gold/80"
+            >
+              Stop
+            </Button>
           </div>
         )}
       </CardContent>

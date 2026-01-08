@@ -6,6 +6,7 @@ import { SurahList } from '@/components/quran/SurahList';
 import { JuzTabs } from '@/components/quran/JuzTabs';
 import { ContinueReading } from '@/components/quran/ContinueReading';
 import { QuickNavigation } from '@/components/quran/QuickNavigation';
+import { PrayerTimesWidget } from '@/components/prayer/PrayerTimesWidget';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Search, BookOpen, Heart, Wifi, WifiOff, Columns2 } from 'lucide-react';
@@ -73,12 +74,20 @@ export default function Index() {
           <ContinueReading />
         </section>
 
-        {/* Daily Ayah */}
-        <section className="mb-12 animate-fade-in-up animation-delay-400" aria-labelledby="daily-ayah-heading">
-          <h2 id="daily-ayah-heading" className="text-2xl font-bold text-foreground mb-4 flex items-center gap-2">
-            ✨ Ayah of the Day
-          </h2>
-          <EnhancedDailyAyah />
+        {/* Daily Ayah & Prayer Times */}
+        <section className="mb-12 grid gap-6 lg:grid-cols-2 animate-fade-in-up animation-delay-400">
+          <div>
+            <h2 className="text-2xl font-bold text-foreground mb-4 flex items-center gap-2">
+              ✨ Ayah of the Day
+            </h2>
+            <EnhancedDailyAyah />
+          </div>
+          <div>
+            <h2 className="text-2xl font-bold text-foreground mb-4 flex items-center gap-2">
+              🕌 Prayer Times
+            </h2>
+            <PrayerTimesWidget />
+          </div>
         </section>
 
         {/* Feature Cards */}

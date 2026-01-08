@@ -3,6 +3,7 @@ import { Book, Search, Bookmark, Settings, Home, Heart, ArrowLeft, User, LogOut 
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -105,6 +106,9 @@ export function Header({ showBack, title }: HeaderProps) {
               </Link>
             );
           })}
+
+          {/* Theme Toggle */}
+          <ThemeToggle />
 
           {/* Auth button */}
           {isAuthenticated ? (

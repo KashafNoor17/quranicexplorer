@@ -1,9 +1,10 @@
 import { useRef, useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Bookmark, BookmarkCheck, Play, Pause, Copy, Check, Loader2 } from 'lucide-react';
+import { Bookmark, BookmarkCheck, Play, Pause, Copy, Check, Loader2, BookOpen } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { TafsirPanel } from '@/components/quran/TafsirPanel';
 import type { Ayah } from '@/lib/schemas';
 
 interface EnhancedAyahCardProps {
@@ -31,6 +32,7 @@ export function EnhancedAyahCard({
 }: EnhancedAyahCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   const [copied, setCopied] = useState(false);
+  const [tafsirOpen, setTafsirOpen] = useState(false);
   const { toast } = useToast();
 
   // Scroll into view when playing with smooth animation
@@ -92,6 +94,17 @@ export function EnhancedAyahCard({
           </div>
           
           <div className="flex items-center gap-1" role="group" aria-label="Verse actions">
+            {/* Tafsir button */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setTafsirOpen(true)}
+              className="h-9 w-9 sm:h-10 sm:w-10 transition-transform hover:scale-105 active:scale-95 focus-ring"
+              aria-label="View tafsir commentary"
+            >
+              <BookOpen className="h-4 w-4" aria-hidden="true" />
+            </Button>
+
             {/* Copy button */}
             <Button
               variant="ghost"
@@ -193,6 +206,15 @@ export function EnhancedAyahCard({
             )}
           </div>
         )}
+
+        {/* Tafsir Panel */}
+        <TafsirPanel
+          open={tafsirOpen}
+          onOpenChange={setTafsirOpen}
+          surahNumber={ayah.surahNumber}
+          ayahNumber={ayah.ayahNumber}
+          arabicText={ayah.arabicText}
+        />
       </CardContent>
     </Card>
   );

@@ -3,17 +3,50 @@ import { Header, Footer } from '@/components/layout/Header';
 import { useBookmarks, surahData } from '@/hooks/useQuran';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Bookmark, ArrowRight, Trash2, Download, Upload } from 'lucide-react';
-import { exportBookmarks, importBookmarks } from '@/lib/storage';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Bookmark, ArrowRight, Trash2, Download, Upload, FileJson, FileText } from 'lucide-react';
+import { exportBookmarks, importBookmarks, getBookmarks } from '@/lib/storage';
 import { useToast } from '@/hooks/use-toast';
 import { useRef } from 'react';
+
+// Convert bookmarks to CSV format
+function bookmarksToCSV(bookmarks: Array<{ surahNumber: number; ayahNumber: number; timestamp: string; notes?: string }>): string {
+  const header = 'surah,verse,timestamp,notes';
+  const rows = bookmarks.map(b => 
+    `${b.surahNumber},${b.ayahNumber},${b.timestamp},"${b.notes || ''}"`
+  );
+  return [header, ...rows].join('\n');
+}
+
+// Parse CSV to bookmarks
+function csvToBookmarks(csv: string): Array<{ surahNumber: number; ayahNumber: number; timestamp: string; notes?: string }> {
+  const lines = csv.trim().split('\n');
+  if (lines.length < 2) return [];
+  
+  // Skip header row
+  return lines.slice(1).map(line => {
+    const parts = line.split(',');
+    return {
+      surahNumber: parseInt(parts[0]) || 1,
+      ayahNumber: parseInt(parts[1]) || 1,
+      timestamp: parts[2] || new Date().toISOString(),
+      notes: parts[3]?.replace(/^"|"$/g, '') || undefined,
+    };
+  }).filter(b => b.surahNumber >= 1 && b.surahNumber <= 114);
+}
 
 export default function BookmarksPage() {
   const { bookmarks, removeBookmark, isLoading } = useBookmarks();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const csvInputRef = useRef<HTMLInputElement>(null);
 
-  const handleExport = async () => {
+  const handleExportJSON = async () => {
     try {
       const data = await exportBookmarks();
       const blob = new Blob([data], { type: 'application/json' });
@@ -25,7 +58,7 @@ export default function BookmarksPage() {
       URL.revokeObjectURL(url);
       toast({
         title: 'Bookmarks exported',
-        description: 'Your bookmarks have been saved to a file.',
+        description: 'Your bookmarks have been saved as JSON.',
       });
     } catch (error) {
       toast({
@@ -36,7 +69,38 @@ export default function BookmarksPage() {
     }
   };
 
-  const handleImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleExportCSV = async () => {
+    try {
+      const allBookmarks = await getBookmarks();
+      // Ensure proper typing for CSV conversion
+      const typedBookmarks = allBookmarks.map(b => ({
+        surahNumber: b.surahNumber ?? 1,
+        ayahNumber: b.ayahNumber ?? 1,
+        timestamp: b.timestamp ?? new Date().toISOString(),
+        notes: undefined as string | undefined,
+      }));
+      const csv = bookmarksToCSV(typedBookmarks);
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'quran-bookmarks.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+      toast({
+        title: 'Bookmarks exported',
+        description: 'Your bookmarks have been saved as CSV.',
+      });
+    } catch (error) {
+      toast({
+        title: 'Export failed',
+        description: 'Failed to export bookmarks.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleImportJSON = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -45,7 +109,7 @@ export default function BookmarksPage() {
       await importBookmarks(text);
       toast({
         title: 'Bookmarks imported',
-        description: 'Your bookmarks have been restored.',
+        description: 'Your bookmarks have been restored from JSON.',
       });
       window.location.reload();
     } catch (error) {
@@ -55,6 +119,40 @@ export default function BookmarksPage() {
         variant: 'destructive',
       });
     }
+    // Reset input
+    event.target.value = '';
+  };
+
+  const handleImportCSV = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const text = await file.text();
+      const parsedBookmarks = csvToBookmarks(text);
+      
+      if (parsedBookmarks.length === 0) {
+        throw new Error('No valid bookmarks found');
+      }
+
+      // Convert to JSON format and import
+      const jsonData = JSON.stringify({ bookmarks: parsedBookmarks });
+      await importBookmarks(jsonData);
+      
+      toast({
+        title: 'Bookmarks imported',
+        description: `${parsedBookmarks.length} bookmarks restored from CSV.`,
+      });
+      window.location.reload();
+    } catch (error) {
+      toast({
+        title: 'Import failed',
+        description: 'Invalid CSV file format. Expected columns: surah,verse,timestamp,notes',
+        variant: 'destructive',
+      });
+    }
+    // Reset input
+    event.target.value = '';
   };
 
   return (
@@ -74,34 +172,72 @@ export default function BookmarksPage() {
           </div>
           
           <div className="flex items-center gap-2" role="group" aria-label="Bookmark actions">
+            {/* Hidden file inputs */}
             <input
               ref={fileInputRef}
               type="file"
               accept=".json"
-              onChange={handleImport}
+              onChange={handleImportJSON}
               className="hidden"
+              aria-label="Import JSON file"
             />
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => fileInputRef.current?.click()}
-              className="transition-transform hover:scale-105 focus-ring"
-              aria-label="Import bookmarks from file"
-            >
-              <Upload className="h-4 w-4 mr-2" aria-hidden="true" />
-              Import
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleExport}
-              disabled={bookmarks.length === 0}
-              className="transition-transform hover:scale-105 focus-ring"
-              aria-label="Export bookmarks to file"
-            >
-              <Download className="h-4 w-4 mr-2" aria-hidden="true" />
-              Export
-            </Button>
+            <input
+              ref={csvInputRef}
+              type="file"
+              accept=".csv"
+              onChange={handleImportCSV}
+              className="hidden"
+              aria-label="Import CSV file"
+            />
+            
+            {/* Import Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="transition-transform hover:scale-105 focus-ring"
+                >
+                  <Upload className="h-4 w-4 mr-2" aria-hidden="true" />
+                  Import
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => fileInputRef.current?.click()}>
+                  <FileJson className="h-4 w-4 mr-2" aria-hidden="true" />
+                  Import JSON
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => csvInputRef.current?.click()}>
+                  <FileText className="h-4 w-4 mr-2" aria-hidden="true" />
+                  Import CSV
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* Export Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  disabled={bookmarks.length === 0}
+                  className="transition-transform hover:scale-105 focus-ring"
+                >
+                  <Download className="h-4 w-4 mr-2" aria-hidden="true" />
+                  Export
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={handleExportJSON}>
+                  <FileJson className="h-4 w-4 mr-2" aria-hidden="true" />
+                  Export as JSON
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleExportCSV}>
+                  <FileText className="h-4 w-4 mr-2" aria-hidden="true" />
+                  Export as CSV
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
 

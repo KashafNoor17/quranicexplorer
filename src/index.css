@@ -443,6 +443,41 @@
     animation: shimmer-move 1.5s ease-in-out infinite;
   }
 
+  @keyframes audio-bar {
+    0%, 100% { height: 0.5rem; }
+    50% { height: 1rem; }
+  }
+
+  .animate-audio-bar {
+    animation: audio-bar 0.6s ease-in-out infinite;
+  }
+
+  @keyframes arabic-glow {
+    0%, 100% { 
+      text-shadow: 0 0 4px hsl(var(--gold) / 0.3);
+    }
+    50% { 
+      text-shadow: 0 0 12px hsl(var(--gold) / 0.6), 0 0 20px hsl(var(--gold) / 0.3);
+    }
+  }
+
+  .animate-arabic-glow {
+    animation: arabic-glow 2s ease-in-out infinite;
+  }
+
+  @keyframes surah-hover-glow {
+    0%, 100% { 
+      box-shadow: 0 0 0 0 hsl(var(--primary) / 0);
+    }
+    50% { 
+      box-shadow: 0 4px 20px -4px hsl(var(--primary) / 0.25);
+    }
+  }
+
+  .animate-surah-hover {
+    animation: surah-hover-glow 2s ease-in-out infinite;
+  }
+
   .animation-delay-100 { animation-delay: 100ms; }
   .animation-delay-200 { animation-delay: 200ms; }
   .animation-delay-300 { animation-delay: 300ms; }
@@ -484,6 +519,9 @@
     .animate-pattern-shift,
     .animate-bounce-in,
     .animate-shimmer,
+    .animate-audio-bar,
+    .animate-arabic-glow,
+    .animate-surah-hover,
     .gold-shimmer,
     .stagger-children > * {
       animation: none !important;

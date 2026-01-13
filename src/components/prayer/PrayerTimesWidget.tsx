@@ -167,6 +167,7 @@ export function PrayerTimesWidget() {
   const [isLoading, setIsLoading] = useState(false);
   const [location, setLocation] = useState<Coordinates | null>(null);
   const [locationName, setLocationName] = useState<string>('');
+  const [hasRequestedLocation, setHasRequestedLocation] = useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState(() => {
     try {
       return localStorage.getItem(NOTIFICATIONS_KEY) === 'true';
@@ -469,8 +470,9 @@ export function PrayerTimesWidget() {
     return () => clearInterval(interval);
   }, [prayerTimes]);
 
-  // Auto-fetch on mount
-  useEffect(() => {
+  // Handle user-initiated location request
+  const handleEnableLocation = useCallback(() => {
+    setHasRequestedLocation(true);
     fetchLocation();
   }, [fetchLocation]);
 
@@ -524,7 +526,7 @@ export function PrayerTimesWidget() {
             <Button
               variant="ghost"
               size="icon"
-              onClick={fetchLocation}
+              onClick={handleEnableLocation}
               disabled={isLoading}
               className="h-8 w-8"
               aria-label="Refresh prayer times"
@@ -546,6 +548,17 @@ export function PrayerTimesWidget() {
         )}
       </CardHeader>
       <CardContent className="pt-4">
+        {!hasRequestedLocation && !prayerTimes && !isLoading && (
+          <div className="text-center py-6">
+            <MapPin className="h-8 w-8 mx-auto text-muted-foreground mb-3" aria-hidden="true" />
+            <p className="text-sm text-muted-foreground mb-3">Enable location to see prayer times for your area</p>
+            <Button variant="default" size="sm" onClick={handleEnableLocation}>
+              <MapPin className="h-4 w-4 mr-2" />
+              Enable Location
+            </Button>
+          </div>
+        )}
+
         {isLoading && !prayerTimes && (
           <div className="flex flex-col items-center justify-center py-8">
             <LoadingSpinner size="lg" />
@@ -553,10 +566,10 @@ export function PrayerTimesWidget() {
           </div>
         )}
 
-        {error && !prayerTimes && (
+        {error && !prayerTimes && hasRequestedLocation && (
           <div className="text-center py-6">
             <p className="text-sm text-destructive mb-3">{error}</p>
-            <Button variant="outline" size="sm" onClick={fetchLocation}>
+            <Button variant="outline" size="sm" onClick={handleEnableLocation}>
               <RefreshCw className="h-4 w-4 mr-2" />
               Try Again
             </Button>

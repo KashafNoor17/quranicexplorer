@@ -15,7 +15,8 @@ import { useSettings } from '@/hooks/useQuran';
 import { exportSettings, importSettings } from '@/lib/storage';
 import { useToast } from '@/hooks/use-toast';
 import { useRef } from 'react';
-import { Download, Upload, Settings as SettingsIcon, Type, Palette, Volume2 } from 'lucide-react';
+import { Download, Upload, Settings as SettingsIcon, Type, Volume2, CloudDownload, Database } from 'lucide-react';
+import { OfflineDownloadManager } from '@/components/settings/OfflineDownloadManager';
 
 const reciters = [
   { id: 'ar.alafasy', name: 'Mishary Rashid Alafasy' },
@@ -204,14 +205,33 @@ export default function SettingsPage() {
             </CardContent>
           </Card>
 
-          {/* Data Management */}
+          {/* Offline Reading */}
           <Card>
             <CardHeader>
-              <CardTitle>Data Management</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <CloudDownload className="h-5 w-5" />
+                Offline Reading
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground mb-4">
+                Download surahs for offline reading. Once downloaded, you can read them without an internet connection.
+              </p>
+              <OfflineDownloadManager />
+            </CardContent>
+          </Card>
+
+          {/* Preferences Backup */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Database className="h-5 w-5" />
+                Preferences Backup
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-sm text-muted-foreground">
-                Export or import your settings to back them up or transfer to another device.
+                Export your display and audio preferences (font size, reciter, language, etc.) to back them up or transfer to another device.
               </p>
               <div className="flex gap-3">
                 <input
@@ -226,11 +246,11 @@ export default function SettingsPage() {
                   onClick={() => fileInputRef.current?.click()}
                 >
                   <Upload className="h-4 w-4 mr-2" />
-                  Import Settings
+                  Import Preferences
                 </Button>
                 <Button variant="outline" onClick={handleExport}>
                   <Download className="h-4 w-4 mr-2" />
-                  Export Settings
+                  Export Preferences
                 </Button>
               </div>
             </CardContent>

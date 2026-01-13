@@ -1,19 +1,22 @@
-import { useEffect } from "react";
+import { useEffect, lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ScrollToTop } from "@/components/layout/ScrollToTop";
-import Index from "./pages/Index";
-import SurahPage from "./pages/SurahPage";
-import SearchPage from "./pages/SearchPage";
-import BookmarksPage from "./pages/BookmarksPage";
-import DuasPage from "./pages/DuasPage";
-import SettingsPage from "./pages/SettingsPage";
-import AuthPage from "./pages/AuthPage";
-import ComparisonPage from "./pages/ComparisonPage";
-import NotFound from "./pages/NotFound";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
+
+// Lazy load pages for code splitting
+const Index = lazy(() => import("./pages/Index"));
+const SurahPage = lazy(() => import("./pages/SurahPage"));
+const SearchPage = lazy(() => import("./pages/SearchPage"));
+const BookmarksPage = lazy(() => import("./pages/BookmarksPage"));
+const DuasPage = lazy(() => import("./pages/DuasPage"));
+const SettingsPage = lazy(() => import("./pages/SettingsPage"));
+const AuthPage = lazy(() => import("./pages/AuthPage"));
+const ComparisonPage = lazy(() => import("./pages/ComparisonPage"));
+const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -54,17 +57,19 @@ const App = () => {
         <Sonner />
         <BrowserRouter>
           <ScrollToTop />
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/surah/:id" element={<SurahPage />} />
-            <Route path="/search" element={<SearchPage />} />
-            <Route path="/compare" element={<ComparisonPage />} />
-            <Route path="/bookmarks" element={<BookmarksPage />} />
-            <Route path="/duas" element={<DuasPage />} />
-            <Route path="/settings" element={<SettingsPage />} />
-            <Route path="/auth" element={<AuthPage />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><LoadingSpinner /></div>}>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/surah/:id" element={<SurahPage />} />
+              <Route path="/search" element={<SearchPage />} />
+              <Route path="/compare" element={<ComparisonPage />} />
+              <Route path="/bookmarks" element={<BookmarksPage />} />
+              <Route path="/duas" element={<DuasPage />} />
+              <Route path="/settings" element={<SettingsPage />} />
+              <Route path="/auth" element={<AuthPage />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Suspense>
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>

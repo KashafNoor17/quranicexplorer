@@ -136,8 +136,8 @@ export function Header({ showBack, title }: HeaderProps) {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <Link to="/auth">
-              <Button variant="ghost" size="sm" className="ml-2 focus-ring">
+            <Link to="/auth" className="ml-3">
+              <Button variant="ghost" size="sm" className="focus-ring min-h-[44px] min-w-[44px]">
                 <User className="h-4 w-4" aria-hidden="true" />
                 <span className="hidden md:inline">Sign in</span>
                 <span className="sr-only md:hidden">Sign in</span>

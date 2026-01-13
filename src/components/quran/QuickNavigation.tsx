@@ -49,7 +49,7 @@ export function QuickNavigation() {
           variant="outline" 
           size="sm" 
           className="gap-2 focus-ring"
-          aria-label="Quick navigation to any Surah and Ayah"
+          aria-label="Jump to Ayah - Quick navigation to any Surah and Ayah"
         >
           <Navigation className="h-4 w-4" aria-hidden="true" />
           <span className="hidden sm:inline">Jump to Ayah</span>

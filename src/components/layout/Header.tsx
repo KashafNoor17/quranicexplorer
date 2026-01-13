@@ -64,7 +64,7 @@ export function Header({ showBack, title }: HeaderProps) {
           <Link 
             to="/" 
             className="flex items-center gap-3 focus-ring rounded-lg"
-            aria-label="Quran Explorer - Go to homepage"
+            aria-label="Quran Explorer - Explore. Reflect. Learn. Go to homepage"
           >
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-emerald-light shadow-soft">
               <Book className="h-5 w-5 text-primary-foreground" aria-hidden="true" />

@@ -1,18 +1,21 @@
 import { useParams, useSearchParams } from 'react-router-dom';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Header, Footer } from '@/components/layout/Header';
 import { EnhancedAyahCard } from '@/components/quran/EnhancedAyahCard';
 import { EnhancedAudioControls } from '@/components/quran/EnhancedAudioControls';
 import { QuickNavigation } from '@/components/quran/QuickNavigation';
 import { FontSizeControl } from '@/components/ui/FontSizeControl';
-import { useSurah, useBookmarks, useProgress, useSettings, surahData } from '@/hooks/useQuran';
+import { useSurah, useBookmarks, useProgress, useSettings, surahData, useOfflineStatus } from '@/hooks/useQuran';
 import { usePersistentAudioPlayer } from '@/hooks/usePersistentAudioPlayer';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent } from '@/components/ui/card';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, Download, Check, Loader2, WifiOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { cacheAyahs } from '@/lib/storage';
+import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 
 export default function SurahPage() {
   const { id } = useParams<{ id: string }>();
@@ -26,9 +29,42 @@ export default function SurahPage() {
   const { updateLastRead } = useProgress();
   const { settings, updateSettings } = useSettings();
 
+  const { isSurahCached, isOnline } = useOfflineStatus();
+  const { toast } = useToast();
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [isCached, setIsCached] = useState(false);
+
   const audioPlayer = usePersistentAudioPlayer(ayahs || [], (ayahNumber) => {
     updateLastRead({ surahNumber, ayahNumber });
   });
+
+  // Check if surah is cached
+  useEffect(() => {
+    setIsCached(isSurahCached(surahNumber));
+  }, [surahNumber, isSurahCached]);
+
+  // Download surah for offline use
+  const handleDownload = async () => {
+    if (!ayahs || ayahs.length === 0) return;
+    
+    setIsDownloading(true);
+    try {
+      await cacheAyahs(ayahs);
+      setIsCached(true);
+      toast({
+        title: "Downloaded!",
+        description: `${surah?.englishName} is now available offline.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Download failed",
+        description: "Could not save surah for offline use.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDownloading(false);
+    }
+  };
 
   // Scroll to specific ayah on load
   useEffect(() => {
@@ -99,6 +135,46 @@ export default function SurahPage() {
                 Translations
               </Label>
             </div>
+            
+            {/* Download / Offline Status Button */}
+            {isCached ? (
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-sm">
+                {isOnline ? (
+                  <>
+                    <Check className="h-4 w-4" />
+                    <span>Available offline</span>
+                  </>
+                ) : (
+                  <>
+                    <WifiOff className="h-4 w-4" />
+                    <span>Offline mode</span>
+                  </>
+                )}
+              </div>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleDownload}
+                disabled={isDownloading || !ayahs || ayahs.length === 0}
+                className={cn(
+                  "gap-2",
+                  isDownloading && "cursor-not-allowed"
+                )}
+              >
+                {isDownloading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Downloading...
+                  </>
+                ) : (
+                  <>
+                    <Download className="h-4 w-4" />
+                    Download
+                  </>
+                )}
+              </Button>
+            )}
           </div>
         </header>
 

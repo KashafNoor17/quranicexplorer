@@ -14,30 +14,79 @@ import { exportBookmarks, importBookmarks, getBookmarks } from '@/lib/storage';
 import { useToast } from '@/hooks/use-toast';
 import { useRef } from 'react';
 
+// Constants for import validation
+const MAX_FILE_SIZE_BYTES = 1024 * 1024; // 1MB max file size
+const MAX_BOOKMARK_ROWS = 10000; // Maximum bookmarks to import
+
 // Convert bookmarks to CSV format
 function bookmarksToCSV(bookmarks: Array<{ surahNumber: number; ayahNumber: number; timestamp: string; notes?: string }>): string {
   const header = 'surah,verse,timestamp,notes';
   const rows = bookmarks.map(b => 
-    `${b.surahNumber},${b.ayahNumber},${b.timestamp},"${b.notes || ''}"`
+    `${b.surahNumber},${b.ayahNumber},${b.timestamp},"${(b.notes || '').replace(/"/g, '""')}"`
   );
   return [header, ...rows].join('\n');
 }
 
-// Parse CSV to bookmarks
-function csvToBookmarks(csv: string): Array<{ surahNumber: number; ayahNumber: number; timestamp: string; notes?: string }> {
+// Validate CSV header
+function validateCSVHeader(header: string): boolean {
+  const expectedColumns = ['surah', 'verse', 'timestamp'];
+  const columns = header.toLowerCase().split(',').map(c => c.trim());
+  return expectedColumns.every(col => columns.includes(col));
+}
+
+// Parse and validate CSV to bookmarks
+function csvToBookmarks(csv: string): { 
+  bookmarks: Array<{ surahNumber: number; ayahNumber: number; timestamp: string; notes?: string }>; 
+  errors: string[];
+} {
+  const errors: string[] = [];
   const lines = csv.trim().split('\n');
-  if (lines.length < 2) return [];
   
-  // Skip header row
-  return lines.slice(1).map(line => {
-    const parts = line.split(',');
-    return {
-      surahNumber: parseInt(parts[0]) || 1,
-      ayahNumber: parseInt(parts[1]) || 1,
-      timestamp: parts[2] || new Date().toISOString(),
-      notes: parts[3]?.replace(/^"|"$/g, '') || undefined,
-    };
-  }).filter(b => b.surahNumber >= 1 && b.surahNumber <= 114);
+  if (lines.length < 2) {
+    return { bookmarks: [], errors: ['CSV file is empty or has no data rows'] };
+  }
+  
+  // Validate header
+  if (!validateCSVHeader(lines[0])) {
+    return { bookmarks: [], errors: ['Invalid CSV header. Expected columns: surah, verse, timestamp, notes'] };
+  }
+  
+  // Check row count limit
+  if (lines.length - 1 > MAX_BOOKMARK_ROWS) {
+    return { bookmarks: [], errors: [`Too many rows. Maximum allowed: ${MAX_BOOKMARK_ROWS}`] };
+  }
+  
+  const bookmarks: Array<{ surahNumber: number; ayahNumber: number; timestamp: string; notes?: string }> = [];
+  
+  // Parse data rows with validation
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (!line) continue;
+    
+    // Simple CSV parsing - handle quoted fields
+    const parts = line.match(/(".*?"|[^,]+)/g) || [];
+    
+    const surahNumber = parseInt(parts[0]) || 0;
+    const ayahNumber = parseInt(parts[1]) || 0;
+    const timestamp = parts[2] || new Date().toISOString();
+    const notes = parts[3]?.replace(/^"|"$/g, '').replace(/""/g, '"') || undefined;
+    
+    // Validate surah number (1-114)
+    if (surahNumber < 1 || surahNumber > 114) {
+      errors.push(`Row ${i + 1}: Invalid surah number (${surahNumber}). Must be 1-114.`);
+      continue;
+    }
+    
+    // Validate ayah number (positive integer, max reasonable limit)
+    if (ayahNumber < 1 || ayahNumber > 286) { // Al-Baqarah has 286 ayahs (longest)
+      errors.push(`Row ${i + 1}: Invalid ayah number (${ayahNumber}).`);
+      continue;
+    }
+    
+    bookmarks.push({ surahNumber, ayahNumber, timestamp, notes });
+  }
+  
+  return { bookmarks, errors };
 }
 
 export default function BookmarksPage() {
@@ -127,27 +176,46 @@ export default function BookmarksPage() {
     const file = event.target.files?.[0];
     if (!file) return;
 
+    // Validate file size
+    if (file.size > MAX_FILE_SIZE_BYTES) {
+      toast({
+        title: 'File too large',
+        description: `Maximum file size is ${MAX_FILE_SIZE_BYTES / 1024 / 1024}MB.`,
+        variant: 'destructive',
+      });
+      event.target.value = '';
+      return;
+    }
+
     try {
       const text = await file.text();
-      const parsedBookmarks = csvToBookmarks(text);
+      const { bookmarks: parsedBookmarks, errors } = csvToBookmarks(text);
       
+      if (errors.length > 0 && parsedBookmarks.length === 0) {
+        throw new Error(errors[0]);
+      }
+
       if (parsedBookmarks.length === 0) {
-        throw new Error('No valid bookmarks found');
+        throw new Error('No valid bookmarks found in the file');
       }
 
       // Convert to JSON format and import
       const jsonData = JSON.stringify({ bookmarks: parsedBookmarks });
       await importBookmarks(jsonData);
       
+      const warningMsg = errors.length > 0 
+        ? ` (${errors.length} rows skipped due to errors)` 
+        : '';
+      
       toast({
         title: 'Bookmarks imported',
-        description: `${parsedBookmarks.length} bookmarks restored from CSV.`,
+        description: `${parsedBookmarks.length} bookmarks restored from CSV${warningMsg}.`,
       });
       window.location.reload();
     } catch (error) {
       toast({
         title: 'Import failed',
-        description: 'Invalid CSV file format. Expected columns: surah,verse,timestamp,notes',
+        description: error instanceof Error ? error.message : 'Invalid CSV file format.',
         variant: 'destructive',
       });
     }

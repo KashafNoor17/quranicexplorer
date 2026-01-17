@@ -3,8 +3,9 @@ import { Link } from 'react-router-dom';
 import { surahData } from '@/hooks/useQuran';
 import { Card, CardContent } from '@/components/ui/card';
 import { useOfflineStatus } from '@/hooks/useQuran';
-import { Check, BookOpen } from 'lucide-react';
+import { Check, BookOpen, CloudDownload } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import type { Surah } from '@/lib/schemas';
 
 interface SurahCardProps {
@@ -84,7 +85,18 @@ function SurahCard({ surah, isCached, index }: SurahCardProps) {
                 {surah.englishName}
               </h3>
               {isCached && (
-                <Check className="h-3 w-3 text-primary shrink-0 animate-bounce-in" />
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="flex items-center justify-center h-5 w-5 rounded-full bg-primary/15 shrink-0 animate-bounce-in">
+                        <CloudDownload className="h-3 w-3 text-primary" />
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="text-xs">
+                      Available offline
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               )}
             </div>
             <p 

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { getUserFriendlyError, logErrorForDebugging } from '@/lib/errorMessages';
 
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
@@ -45,19 +46,12 @@ export function useAuth() {
       });
 
       if (error) {
-        if (error.message.includes('already registered')) {
-          toast({
-            title: 'Account exists',
-            description: 'This email is already registered. Please sign in instead.',
-            variant: 'destructive',
-          });
-        } else {
-          toast({
-            title: 'Sign up failed',
-            description: error.message,
-            variant: 'destructive',
-          });
-        }
+        logErrorForDebugging(error, 'signUp');
+        toast({
+          title: 'Sign up failed',
+          description: getUserFriendlyError(error, 'auth'),
+          variant: 'destructive',
+        });
         return { error };
       }
 
@@ -68,10 +62,10 @@ export function useAuth() {
 
       return { data, error: null };
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'An unexpected error occurred';
+      logErrorForDebugging(error, 'signUp');
       toast({
         title: 'Sign up failed',
-        description: message,
+        description: getUserFriendlyError(error, 'auth'),
         variant: 'destructive',
       });
       return { error };
@@ -86,9 +80,10 @@ export function useAuth() {
       });
 
       if (error) {
+        logErrorForDebugging(error, 'signIn');
         toast({
           title: 'Sign in failed',
-          description: error.message,
+          description: getUserFriendlyError(error, 'auth'),
           variant: 'destructive',
         });
         return { error };
@@ -101,10 +96,10 @@ export function useAuth() {
 
       return { data, error: null };
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'An unexpected error occurred';
+      logErrorForDebugging(error, 'signIn');
       toast({
         title: 'Sign in failed',
-        description: message,
+        description: getUserFriendlyError(error, 'auth'),
         variant: 'destructive',
       });
       return { error };
@@ -115,9 +110,10 @@ export function useAuth() {
     try {
       const { error } = await supabase.auth.signOut();
       if (error) {
+        logErrorForDebugging(error, 'signOut');
         toast({
           title: 'Sign out failed',
-          description: error.message,
+          description: getUserFriendlyError(error, 'auth'),
           variant: 'destructive',
         });
         return { error };
@@ -130,10 +126,10 @@ export function useAuth() {
 
       return { error: null };
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'An unexpected error occurred';
+      logErrorForDebugging(error, 'signOut');
       toast({
         title: 'Sign out failed',
-        description: message,
+        description: getUserFriendlyError(error, 'auth'),
         variant: 'destructive',
       });
       return { error };

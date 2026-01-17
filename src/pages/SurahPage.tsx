@@ -222,7 +222,7 @@ export default function SurahPage() {
               <AlertCircle className="mx-auto h-12 w-12 text-destructive mb-4" aria-hidden="true" />
               <h3 className="text-lg font-semibold mb-2">Failed to load Surah</h3>
               <p className="text-muted-foreground mb-4">
-                {(error as Error).message || 'An error occurred while loading the Surah.'}
+                Unable to load content. Please check your connection and try again.
               </p>
               <Button 
                 onClick={() => window.location.reload()}

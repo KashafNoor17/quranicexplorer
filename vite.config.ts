@@ -19,11 +19,16 @@ export default defineConfig(({ mode }) => ({
     sourcemap: true,
     rollupOptions: {
       output: {
-        manualChunks: {
-          // Split vendor chunks for better caching and reduced initial load
-          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          'ui-vendor': ['@radix-ui/react-dialog', '@radix-ui/react-select', '@radix-ui/react-tabs', '@radix-ui/react-tooltip', '@radix-ui/react-popover'],
-          'query-vendor': ['@tanstack/react-query'],
+        manualChunks(id) {
+          // Keep React ecosystem in one chunk to avoid duplicate instances
+          if (id.includes('node_modules')) {
+            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router') || id.includes('@radix-ui') || id.includes('scheduler')) {
+              return 'react-vendor';
+            }
+            if (id.includes('@tanstack/react-query')) {
+              return 'query-vendor';
+            }
+          }
         },
       },
     },

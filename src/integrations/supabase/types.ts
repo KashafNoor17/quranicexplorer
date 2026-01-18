@@ -38,6 +38,30 @@ export type Database = {
         }
         Relationships: []
       }
+      login_attempts: {
+        Row: {
+          attempted_at: string
+          email: string
+          id: string
+          ip_address: string | null
+          success: boolean
+        }
+        Insert: {
+          attempted_at?: string
+          email: string
+          id?: string
+          ip_address?: string | null
+          success?: boolean
+        }
+        Update: {
+          attempted_at?: string
+          email?: string
+          id?: string
+          ip_address?: string | null
+          success?: boolean
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -130,7 +154,26 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      check_account_lockout: {
+        Args: {
+          check_email: string
+          lockout_duration_minutes?: number
+          lockout_threshold?: number
+        }
+        Returns: Json
+      }
+      clear_failed_attempts: {
+        Args: { clear_email: string }
+        Returns: undefined
+      }
+      record_login_attempt: {
+        Args: {
+          attempt_email: string
+          attempt_ip: string
+          attempt_success: boolean
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

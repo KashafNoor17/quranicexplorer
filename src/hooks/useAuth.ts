@@ -4,6 +4,44 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { getUserFriendlyError, logErrorForDebugging } from '@/lib/errorMessages';
 
+interface LockoutStatus {
+  is_locked: boolean;
+  failed_attempts: number;
+  lockout_threshold: number;
+  lockout_until: string | null;
+  remaining_attempts: number;
+}
+
+interface RateLimitResponse {
+  allowed?: boolean;
+  success?: boolean;
+  lockout_status?: LockoutStatus;
+  is_locked?: boolean;
+  remaining_attempts?: number;
+  lockout_until?: string | null;
+  error?: string;
+}
+
+async function checkRateLimit(email: string, action: 'check' | 'record_success' | 'record_failure'): Promise<RateLimitResponse> {
+  try {
+    const { data, error } = await supabase.functions.invoke('check-login-rate-limit', {
+      body: { email, action }
+    });
+    
+    if (error) {
+      console.error('Rate limit check failed:', error);
+      // Don't block login if rate limit check fails
+      return { allowed: true };
+    }
+    
+    return data as RateLimitResponse;
+  } catch (err) {
+    console.error('Rate limit service error:', err);
+    // Don't block login if service is unavailable
+    return { allowed: true };
+  }
+}
+
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
@@ -74,20 +112,50 @@ export function useAuth() {
 
   const signIn = useCallback(async (email: string, password: string) => {
     try {
+      // Check rate limit before attempting login
+      const rateLimitCheck = await checkRateLimit(email, 'check');
+      
+      if (!rateLimitCheck.allowed && rateLimitCheck.is_locked) {
+        const lockoutUntil = rateLimitCheck.lockout_until 
+          ? new Date(rateLimitCheck.lockout_until).toLocaleTimeString() 
+          : 'a few minutes';
+        
+        toast({
+          title: 'Account temporarily locked',
+          description: `Too many failed login attempts. Please try again after ${lockoutUntil}.`,
+          variant: 'destructive',
+        });
+        return { error: new Error('Account locked due to too many failed attempts') };
+      }
+
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) {
+        // Record failed attempt
+        const failureResult = await checkRateLimit(email, 'record_failure');
+        
         logErrorForDebugging(error, 'signIn');
+        
+        let description = getUserFriendlyError(error, 'auth');
+        
+        // Add remaining attempts warning if close to lockout
+        if (failureResult.lockout_status && failureResult.lockout_status.remaining_attempts <= 2) {
+          description += ` (${failureResult.lockout_status.remaining_attempts} attempts remaining before lockout)`;
+        }
+        
         toast({
           title: 'Sign in failed',
-          description: getUserFriendlyError(error, 'auth'),
+          description,
           variant: 'destructive',
         });
         return { error };
       }
+
+      // Record successful login
+      await checkRateLimit(email, 'record_success');
 
       toast({
         title: 'Welcome back!',

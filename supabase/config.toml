@@ -1,1 +1,4 @@
 project_id = "zonnlnogpijlglcmdlss"
+
+[functions.check-login-rate-limit]
+verify_jwt = false

@@ -174,6 +174,39 @@ export function useAuth() {
     }
   }, [toast]);
 
+  const signInWithGoogle = useCallback(async () => {
+    try {
+      const redirectUrl = `${window.location.origin}/`;
+      
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: redirectUrl,
+        },
+      });
+
+      if (error) {
+        logErrorForDebugging(error, 'signInWithGoogle');
+        toast({
+          title: 'Google sign in failed',
+          description: getUserFriendlyError(error, 'auth'),
+          variant: 'destructive',
+        });
+        return { error };
+      }
+
+      return { error: null };
+    } catch (error) {
+      logErrorForDebugging(error, 'signInWithGoogle');
+      toast({
+        title: 'Google sign in failed',
+        description: getUserFriendlyError(error, 'auth'),
+        variant: 'destructive',
+      });
+      return { error };
+    }
+  }, [toast]);
+
   const signOut = useCallback(async () => {
     try {
       const { error } = await supabase.auth.signOut();
@@ -211,6 +244,7 @@ export function useAuth() {
     isAuthenticated: !!session,
     signUp,
     signIn,
+    signInWithGoogle,
     signOut,
   };
 }

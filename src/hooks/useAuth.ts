@@ -94,8 +94,8 @@ export function useAuth() {
       }
 
       toast({
-        title: 'Account created!',
-        description: 'Welcome to Quran Explorer. You are now signed in.',
+        title: 'Verification email sent!',
+        description: 'Please check your email and click the verification link to complete your registration.',
       });
 
       return { data, error: null };

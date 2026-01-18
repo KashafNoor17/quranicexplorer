@@ -6,7 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
-import { BookOpen, Mail, Lock, User, Loader2 } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { BookOpen, Mail, Lock, User, Loader2, CheckCircle2 } from 'lucide-react';
 import { z } from 'zod';
 
 const emailSchema = z.string().email('Please enter a valid email address');
@@ -27,6 +28,7 @@ export default function AuthPage() {
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+  const [showVerificationMessage, setShowVerificationMessage] = useState(false);
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -80,7 +82,8 @@ export default function AuthPage() {
     setIsLoading(false);
     
     if (!error) {
-      navigate('/', { replace: true });
+      // Show verification message instead of navigating
+      setShowVerificationMessage(true);
     }
   };
 
@@ -171,72 +174,94 @@ export default function AuthPage() {
 
               {/* Sign Up Form */}
               <TabsContent value="signup" className="mt-0">
-                <form onSubmit={handleSignUp} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-name">Display Name (optional)</Label>
-                    <div className="relative">
-                      <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id="signup-name"
-                        type="text"
-                        placeholder="Your name"
-                        value={displayName}
-                        onChange={(e) => setDisplayName(e.target.value)}
-                        className="pl-10"
-                        disabled={isLoading}
-                      />
-                    </div>
+                {showVerificationMessage ? (
+                  <div className="space-y-4">
+                    <Alert className="border-emerald-500/50 bg-emerald-500/10">
+                      <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                      <AlertDescription className="text-foreground">
+                        <strong>Check your email!</strong>
+                        <p className="mt-2 text-sm text-muted-foreground">
+                          We've sent a verification link to <strong>{email}</strong>. 
+                          Please click the link to verify your email and complete your registration.
+                        </p>
+                      </AlertDescription>
+                    </Alert>
+                    <Button 
+                      variant="outline" 
+                      className="w-full"
+                      onClick={() => setShowVerificationMessage(false)}
+                    >
+                      Back to Sign Up
+                    </Button>
                   </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-email">Email</Label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id="signup-email"
-                        type="email"
-                        placeholder="you@example.com"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        className="pl-10"
-                        disabled={isLoading}
-                      />
+                ) : (
+                  <form onSubmit={handleSignUp} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="signup-name">Display Name (optional)</Label>
+                      <div className="relative">
+                        <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          id="signup-name"
+                          type="text"
+                          placeholder="Your name"
+                          value={displayName}
+                          onChange={(e) => setDisplayName(e.target.value)}
+                          className="pl-10"
+                          disabled={isLoading}
+                        />
+                      </div>
                     </div>
-                    {errors.email && (
-                      <p className="text-sm text-destructive">{errors.email}</p>
-                    )}
-                  </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-password">Password</Label>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id="signup-password"
-                        type="password"
-                        placeholder="••••••••"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        className="pl-10"
-                        disabled={isLoading}
-                      />
+                    <div className="space-y-2">
+                      <Label htmlFor="signup-email">Email</Label>
+                      <div className="relative">
+                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          id="signup-email"
+                          type="email"
+                          placeholder="you@example.com"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          className="pl-10"
+                          disabled={isLoading}
+                        />
+                      </div>
+                      {errors.email && (
+                        <p className="text-sm text-destructive">{errors.email}</p>
+                      )}
                     </div>
-                    {errors.password && (
-                      <p className="text-sm text-destructive">{errors.password}</p>
-                    )}
-                  </div>
 
-                  <Button type="submit" className="w-full" disabled={isLoading}>
-                    {isLoading ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        Creating account...
-                      </>
-                    ) : (
-                      'Create Account'
-                    )}
-                  </Button>
-                </form>
+                    <div className="space-y-2">
+                      <Label htmlFor="signup-password">Password</Label>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          id="signup-password"
+                          type="password"
+                          placeholder="••••••••"
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          className="pl-10"
+                          disabled={isLoading}
+                        />
+                      </div>
+                      {errors.password && (
+                        <p className="text-sm text-destructive">{errors.password}</p>
+                      )}
+                    </div>
+
+                    <Button type="submit" className="w-full" disabled={isLoading}>
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Creating account...
+                        </>
+                      ) : (
+                        'Create Account'
+                      )}
+                    </Button>
+                  </form>
+                )}
               </TabsContent>
             </CardContent>
           </Tabs>
